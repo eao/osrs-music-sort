@@ -11,7 +11,7 @@
       "wikiUrl": "https://oldschool.runescape.wiki/w/7th_Realm",
       "audioUrl": "https://oldschool.runescape.wiki/images/7th_Realm.ogg",
       "duration": "04:07",
-      "members": false,
+      "members": true,
       "unlockHint": "Unlocked in the Brimhaven Dungeon",
       "isHoliday": false,
       "sourceRevision": null

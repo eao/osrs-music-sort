@@ -13,7 +13,7 @@ describe('track snapshot', () => {
       title: '7th Realm',
       wikiUrl: 'https://oldschool.runescape.wiki/w/7th_Realm',
       duration: '04:07',
-      members: false,
+      members: true,
       isHoliday: false
     });
   });
