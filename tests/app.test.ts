@@ -63,6 +63,21 @@ describe('ranker app', () => {
       result: 'left'
     });
   });
+
+  it('ignores stale choice clicks after advancing to a new matchup', () => {
+    const root = document.createElement('main');
+    renderApp(root);
+
+    root.querySelector<HTMLButtonElement>('[data-testid="heard-left"]')?.click();
+    root.querySelector<HTMLButtonElement>('[data-testid="heard-right"]')?.click();
+    const stalePreferLeft = root.querySelector<HTMLButtonElement>('[data-testid="prefer-left"]');
+
+    stalePreferLeft?.click();
+    stalePreferLeft?.click();
+
+    const stored = JSON.parse(localStorage.getItem('osrs-music-ranker-state') ?? '{}');
+    expect(stored.comparisons).toHaveLength(1);
+  });
 });
 
 function displayedPair(root: HTMLElement): [string, string] {

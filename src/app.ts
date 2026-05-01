@@ -168,7 +168,7 @@ export function renderApp(root: HTMLElement): void {
 
   const saveComparison = (result: ComparisonResult): void => {
     const pair = state.currentPair;
-    if (!pair || !state.ratings[pair[0]] || !state.ratings[pair[1]]) {
+    if (!heard.left || !heard.right || !pair || !state.ratings[pair[0]] || !state.ratings[pair[1]]) {
       return;
     }
 
