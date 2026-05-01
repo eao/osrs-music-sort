@@ -78,6 +78,16 @@ describe('ranker app', () => {
     const stored = JSON.parse(localStorage.getItem('osrs-music-ranker-state') ?? '{}');
     expect(stored.comparisons).toHaveLength(1);
   });
+
+  it('marks a track unavailable and saves that marker', () => {
+    const root = document.createElement('main');
+    renderApp(root);
+
+    root.querySelector<HTMLButtonElement>('[data-testid="mark-left-unavailable"]')?.click();
+
+    const stored = JSON.parse(localStorage.getItem('osrs-music-ranker-state') ?? '{}');
+    expect(stored.unavailableTrackIds).toContain('7th-realm');
+  });
 });
 
 function displayedPair(root: HTMLElement): [string, string] {

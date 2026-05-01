@@ -121,6 +121,7 @@ button:disabled {
 }
 
 .heard-button,
+.unavailable-button,
 .skip-button,
 .reset-button,
 .choice-button {
@@ -130,6 +131,7 @@ button:disabled {
 
 .heard-button.is-active,
 .choice-button:not(:disabled):hover,
+.unavailable-button:hover,
 .skip-button:hover,
 .reset-button:hover {
   color: #fff4df;
@@ -195,7 +197,8 @@ button:disabled {
   }
 
   .track-panel a,
-  .heard-button {
+  .heard-button,
+  .unavailable-button {
     width: 100%;
   }
 }

@@ -104,7 +104,8 @@ export function renderApp(root: HTMLElement): void {
       track.unlockHint ? element('p', 'unlock-hint', track.unlockHint) : element('p'),
       audio,
       wikiLink,
-      heardButton(label, side, isHeard)
+      heardButton(label, side, isHeard),
+      unavailableButton(side)
     );
 
     return article;
@@ -119,6 +120,19 @@ export function renderApp(root: HTMLElement): void {
     button.addEventListener('click', () => {
       heard = { ...heard, [side]: true };
       rerender();
+    });
+    return button;
+  };
+
+  const unavailableButton = (side: keyof HeardState): HTMLButtonElement => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'unavailable-button';
+    button.dataset.testid =
+      side === 'left' ? 'mark-left-unavailable' : 'mark-right-unavailable';
+    button.textContent = 'Mark unavailable';
+    button.addEventListener('click', () => {
+      markUnavailable(side);
     });
     return button;
   };
@@ -164,6 +178,34 @@ export function renderApp(root: HTMLElement): void {
       }
     });
     return button;
+  };
+
+  const markUnavailable = (side: keyof HeardState): void => {
+    const pair = state.currentPair;
+    if (!pair) {
+      return;
+    }
+
+    const unavailableTrackId = side === 'left' ? pair[0] : pair[1];
+    const unavailableTrackIds = new Set(state.unavailableTrackIds);
+    unavailableTrackIds.add(unavailableTrackId);
+    const nextLastPair: [string, string] = [pair[0], pair[1]];
+
+    state = {
+      ...state,
+      unavailableTrackIds: [...unavailableTrackIds],
+      lastPair: nextLastPair,
+      currentPair: selectNextPair({
+        tracks: snapshot.tracks,
+        ratings: state.ratings,
+        unavailableTrackIds,
+        lastPair: nextLastPair
+      })
+    };
+
+    heard = { left: false, right: false };
+    saveStoredState(state);
+    rerender();
   };
 
   const saveComparison = (result: ComparisonResult): void => {
