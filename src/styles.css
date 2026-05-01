@@ -36,4 +36,166 @@ button:disabled {
   background: #e7ddc8;
   border-left: 1px solid #a8916c;
   border-right: 1px solid #a8916c;
+  box-shadow: 0 0 0 1px #f4ead4 inset;
+}
+
+.site-header {
+  padding: 1rem 1.25rem;
+  color: #f6ead2;
+  background: #5b231f;
+  border-bottom: 3px solid #3c1714;
+}
+
+.site-header h1 {
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.comparison-count {
+  margin: 0.25rem 0 0;
+  color: #ead7b5;
+}
+
+.matchup,
+.rankings {
+  margin: 1rem;
+  padding: 1rem;
+  background: #f0e5cc;
+  border: 1px solid #8b7351;
+}
+
+.matchup h2,
+.rankings h2 {
+  margin: 0 0 0.85rem;
+  color: #5b231f;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.35rem;
+}
+
+.track-panel {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  margin: 0 0 0.75rem;
+  padding: 0.85rem;
+  background: #d8c7a6;
+  border: 1px solid #8b7351;
+}
+
+.track-panel h3 {
+  margin: 0;
+  color: #2b2118;
+  font-size: 1.2rem;
+}
+
+.track-label,
+.track-meta,
+.unlock-hint {
+  margin: 0;
+}
+
+.track-label {
+  color: #5b231f;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+}
+
+.track-meta,
+.unlock-hint {
+  color: #4f3e29;
+}
+
+.track-panel audio {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-height: 40px;
+}
+
+.track-panel a {
+  color: #5b231f;
+  font-weight: 700;
+}
+
+.heard-button,
+.skip-button,
+.reset-button,
+.choice-button {
+  background: #cbb487;
+  border-color: #5f4b32;
+}
+
+.heard-button.is-active,
+.choice-button:not(:disabled):hover,
+.skip-button:hover,
+.reset-button:hover {
+  color: #fff4df;
+  background: #7b3029;
+  border-color: #3c1714;
+}
+
+.choice-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 1rem 0 0.75rem;
+}
+
+.choice-button {
+  min-height: 2.75rem;
+  font-weight: 700;
+}
+
+.skip-button {
+  width: 100%;
+}
+
+.rankings {
+  overflow-x: auto;
+}
+
+.rankings .reset-button {
+  margin: 0 0 0.85rem;
+}
+
+.rankings-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff7e6;
+  border: 1px solid #8b7351;
+}
+
+.rankings-table th,
+.rankings-table td {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #b39a72;
+  text-align: left;
+}
+
+.rankings-table th {
+  color: #f6ead2;
+  background: #5b231f;
+}
+
+.rankings-table tr:nth-child(even) td {
+  background: #eadbc0;
+}
+
+@media (max-width: 720px) {
+  .site-header h1 {
+    font-size: 1.55rem;
+  }
+
+  .track-panel,
+  .choice-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .track-panel a,
+  .heard-button {
+    width: 100%;
+  }
 }
