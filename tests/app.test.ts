@@ -5,13 +5,16 @@ import { renderApp } from '../src/app';
 describe('ranker app', () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.spyOn(HTMLMediaElement.prototype, 'play').mockImplementation(() => Promise.resolve());
+    vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => undefined);
   });
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
-  it('renders the first matchup with disabled choice buttons', () => {
+  it('renders the first matchup with always-available choice buttons and no heard controls', () => {
     const root = document.createElement('main');
     renderApp(root);
 
@@ -21,27 +24,14 @@ describe('ranker app', () => {
       'A Dangerous Game'
     );
     expect(root.querySelector<HTMLButtonElement>('[data-testid="prefer-left"]')?.disabled).toBe(
-      true
-    );
-    expect(root.querySelector<HTMLButtonElement>('[data-testid="prefer-right"]')?.disabled).toBe(
-      true
-    );
-  });
-
-  it('enables choices after both tracks are marked heard', () => {
-    const root = document.createElement('main');
-    renderApp(root);
-
-    root.querySelector<HTMLButtonElement>('[data-testid="heard-left"]')?.click();
-    root.querySelector<HTMLButtonElement>('[data-testid="heard-right"]')?.click();
-
-    expect(root.querySelector<HTMLButtonElement>('[data-testid="prefer-left"]')?.disabled).toBe(
       false
     );
     expect(root.querySelector<HTMLButtonElement>('[data-testid="tie"]')?.disabled).toBe(false);
     expect(root.querySelector<HTMLButtonElement>('[data-testid="prefer-right"]')?.disabled).toBe(
       false
     );
+    expect(root.querySelector('[data-testid="heard-left"]')).toBeNull();
+    expect(root.querySelector('[data-testid="heard-right"]')).toBeNull();
   });
 
   it('saves a comparison and advances after choosing a winner', () => {
@@ -51,8 +41,6 @@ describe('ranker app', () => {
     const root = document.createElement('main');
     renderApp(root);
     const displayedTrackIds = displayedPair(root);
-    root.querySelector<HTMLButtonElement>('[data-testid="heard-left"]')?.click();
-    root.querySelector<HTMLButtonElement>('[data-testid="heard-right"]')?.click();
     root.querySelector<HTMLButtonElement>('[data-testid="prefer-left"]')?.click();
 
     const stored = JSON.parse(localStorage.getItem('osrs-music-ranker-state') ?? '{}');
@@ -68,8 +56,6 @@ describe('ranker app', () => {
     const root = document.createElement('main');
     renderApp(root);
 
-    root.querySelector<HTMLButtonElement>('[data-testid="heard-left"]')?.click();
-    root.querySelector<HTMLButtonElement>('[data-testid="heard-right"]')?.click();
     const stalePreferLeft = root.querySelector<HTMLButtonElement>('[data-testid="prefer-left"]');
 
     stalePreferLeft?.click();
@@ -79,7 +65,17 @@ describe('ranker app', () => {
     expect(stored.comparisons).toHaveLength(1);
   });
 
-  it('marks a track unavailable and saves that marker', () => {
+  it('keeps unavailable controls inside track options', () => {
+    const root = document.createElement('main');
+    renderApp(root);
+
+    expect(root.querySelector<HTMLDetailsElement>('[data-testid="left-options"]')).not.toBeNull();
+    expect(
+      root.querySelector<HTMLButtonElement>('[data-testid="mark-left-unavailable"]')?.textContent
+    ).toBe('Mark Track A unavailable');
+  });
+
+  it('marks a track unavailable and saves that marker from options', () => {
     const root = document.createElement('main');
     renderApp(root);
 
@@ -148,6 +144,55 @@ describe('ranker app', () => {
     expect(
       root.querySelector<HTMLButtonElement>('[data-testid="mark-right-unavailable"]')?.textContent
     ).toBe('Mark Track B unavailable');
+  });
+
+  it('undoes the previous comparison and restores the previous matchup', () => {
+    const root = document.createElement('main');
+    renderApp(root);
+    const firstPair = displayedPair(root);
+
+    root.querySelector<HTMLButtonElement>('[data-testid="prefer-left"]')?.click();
+    expect(displayedPair(root)).not.toEqual(firstPair);
+
+    root.querySelector<HTMLButtonElement>('[data-testid="undo"]')?.click();
+
+    const stored = JSON.parse(localStorage.getItem('osrs-music-ranker-state') ?? '{}');
+    expect(displayedPair(root)).toEqual(firstPair);
+    expect(stored.comparisons).toHaveLength(0);
+  });
+
+  it('starts playback with Track A and then plays Track B when Track A ends', async () => {
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, 'play')
+      .mockImplementation(() => Promise.resolve());
+    vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => undefined);
+
+    const root = document.createElement('main');
+    renderApp(root);
+    await Promise.resolve();
+
+    const leftAudio = root.querySelector<HTMLAudioElement>('[data-testid="left-audio"]');
+    const rightAudio = root.querySelector<HTMLAudioElement>('[data-testid="right-audio"]');
+    expect(play).toHaveBeenCalledTimes(1);
+
+    leftAudio?.dispatchEvent(new Event('ended'));
+    await Promise.resolve();
+
+    expect(play).toHaveBeenCalledTimes(2);
+    expect(rightAudio?.dataset.playing).toBe('true');
+  });
+
+  it('shows a start playback button when autoplay is blocked', async () => {
+    vi.spyOn(HTMLMediaElement.prototype, 'play').mockImplementation(() =>
+      Promise.reject(new Error('blocked'))
+    );
+
+    const root = document.createElement('main');
+    renderApp(root);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(root.querySelector<HTMLButtonElement>('[data-testid="start-playback"]')).not.toBeNull();
   });
 });
 

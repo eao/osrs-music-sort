@@ -74,15 +74,34 @@ button:disabled {
   font-size: 1.35rem;
 }
 
+.playback-status {
+  margin: 0 0 0.85rem;
+  padding: 0.5rem 0.65rem;
+  color: #4f3e29;
+  background: #eadbc0;
+  border: 1px solid #b39a72;
+}
+
+.start-playback-button {
+  margin-left: 0.5rem;
+}
+
+.matchup-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
 .track-panel {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr;
   gap: 0.5rem 1rem;
-  align-items: center;
+  align-items: start;
   margin: 0 0 0.75rem;
   padding: 0.85rem;
   background: #d8c7a6;
   border: 1px solid #8b7351;
+  min-width: 0;
 }
 
 .track-panel h3 {
@@ -110,7 +129,6 @@ button:disabled {
 }
 
 .track-panel audio {
-  grid-column: 1 / -1;
   width: 100%;
   min-height: 40px;
 }
@@ -120,23 +138,38 @@ button:disabled {
   font-weight: 700;
 }
 
-.heard-button,
 .unavailable-button,
 .skip-button,
 .reset-button,
+.undo-button,
 .choice-button {
   background: #cbb487;
   border-color: #5f4b32;
 }
 
-.heard-button.is-active,
 .choice-button:not(:disabled):hover,
 .unavailable-button:hover,
 .skip-button:hover,
+.undo-button:hover,
 .reset-button:hover {
   color: #fff4df;
   background: #7b3029;
   border-color: #3c1714;
+}
+
+.track-options {
+  margin-top: 0.35rem;
+}
+
+.track-options summary {
+  color: #5b231f;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.track-options .unavailable-button {
+  margin-top: 0.5rem;
+  width: auto;
 }
 
 .choice-controls {
@@ -151,8 +184,14 @@ button:disabled {
   font-weight: 700;
 }
 
-.skip-button {
-  width: 100%;
+.secondary-controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.secondary-controls button {
+  flex: 1 1 0;
 }
 
 .rankings {
@@ -192,13 +231,18 @@ button:disabled {
   }
 
   .track-panel,
-  .choice-controls {
+  .choice-controls,
+  .matchup-panels {
     grid-template-columns: 1fr;
   }
 
   .track-panel a,
-  .heard-button,
-  .unavailable-button {
+  .unavailable-button,
+  .secondary-controls {
     width: 100%;
+  }
+
+  .secondary-controls {
+    flex-direction: column;
   }
 }
