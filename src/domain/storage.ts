@@ -1,0 +1,80 @@
+import type { StoredState, Track } from './types';
+import { createInitialRatings } from './rating';
+
+export const STORAGE_KEY = 'osrs-music-ranker-state';
+
+export function loadStoredState(datasetVersion: string, tracks: Track[]): StoredState {
+  const initial = createEmptyState(datasetVersion, tracks);
+  const raw = localStorage.getItem(STORAGE_KEY);
+
+  if (!raw) {
+    return initial;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as StoredState;
+    if (parsed.schemaVersion !== 1) {
+      return initial;
+    }
+
+    if (parsed.datasetVersion !== datasetVersion) {
+      return migrateState(parsed, datasetVersion, tracks);
+    }
+
+    return {
+      ...initial,
+      ...parsed,
+      ratings: {
+        ...initial.ratings,
+        ...filterRatings(parsed.ratings, tracks)
+      }
+    };
+  } catch {
+    return initial;
+  }
+}
+
+export function saveStoredState(state: StoredState): void {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+export function createEmptyState(datasetVersion: string, tracks: Track[]): StoredState {
+  return {
+    schemaVersion: 1,
+    datasetVersion,
+    ratings: createInitialRatings(tracks),
+    comparisons: [],
+    unavailableTrackIds: [],
+    currentPair: null,
+    lastPair: null,
+    playback: {
+      volume: 0.8
+    }
+  };
+}
+
+function migrateState(previous: StoredState, datasetVersion: string, tracks: Track[]): StoredState {
+  const next = createEmptyState(datasetVersion, tracks);
+  const filteredRatings = filterRatings(previous.ratings, tracks);
+
+  return {
+    ...next,
+    ratings: {
+      ...next.ratings,
+      ...filteredRatings
+    },
+    comparisons: previous.comparisons,
+    unavailableTrackIds: previous.unavailableTrackIds.filter((id) =>
+      tracks.some((track) => track.id === id)
+    ),
+    playback: previous.playback ?? next.playback
+  };
+}
+
+function filterRatings(ratings: StoredState['ratings'], tracks: Track[]): StoredState['ratings'] {
+  const trackIds = new Set(tracks.map((track) => track.id));
+
+  return Object.fromEntries(
+    Object.entries(ratings).filter(([trackId]) => trackIds.has(trackId))
+  );
+}
