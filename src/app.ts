@@ -82,7 +82,7 @@ export function renderApp(root: HTMLElement): void {
     const header = element('header', 'site-header');
     const headerText = element('div', 'header-text');
     headerText.append(
-      element('h1', undefined, 'OSRS Music Ranker'),
+      element('h1', undefined, 'OSRS Music Sorter'),
       element(
         'p',
         'comparison-count',

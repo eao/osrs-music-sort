@@ -18,7 +18,7 @@ describe('ranker app', () => {
     const root = document.createElement('main');
     renderApp(root);
 
-    expect(root.querySelector('h1')?.textContent).toBe('OSRS Music Ranker');
+    expect(root.querySelector('h1')?.textContent).toBe('OSRS Music Sorter');
     expect(root.querySelector('[data-testid="left-track"]')?.textContent).toContain('7th Realm');
     expect(root.querySelector('[data-testid="right-track"]')?.textContent).toContain(
       'A Dangerous Game'
