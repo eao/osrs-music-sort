@@ -105,7 +105,7 @@ export function renderApp(root: HTMLElement): void {
       audio,
       wikiLink,
       heardButton(label, side, isHeard),
-      unavailableButton(side)
+      unavailableButton(side, track.id)
     );
 
     return article;
@@ -124,7 +124,7 @@ export function renderApp(root: HTMLElement): void {
     return button;
   };
 
-  const unavailableButton = (side: keyof HeardState): HTMLButtonElement => {
+  const unavailableButton = (side: keyof HeardState, trackId: string): HTMLButtonElement => {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'unavailable-button';
@@ -132,7 +132,7 @@ export function renderApp(root: HTMLElement): void {
       side === 'left' ? 'mark-left-unavailable' : 'mark-right-unavailable';
     button.textContent = 'Mark unavailable';
     button.addEventListener('click', () => {
-      markUnavailable(side);
+      markUnavailable(side, trackId);
     });
     return button;
   };
@@ -180,13 +180,17 @@ export function renderApp(root: HTMLElement): void {
     return button;
   };
 
-  const markUnavailable = (side: keyof HeardState): void => {
+  const markUnavailable = (side: keyof HeardState, trackId: string): void => {
     const pair = state.currentPair;
     if (!pair) {
       return;
     }
 
     const unavailableTrackId = side === 'left' ? pair[0] : pair[1];
+    if (unavailableTrackId !== trackId) {
+      return;
+    }
+
     const unavailableTrackIds = new Set(state.unavailableTrackIds);
     unavailableTrackIds.add(unavailableTrackId);
     const nextLastPair: [string, string] = [pair[0], pair[1]];
