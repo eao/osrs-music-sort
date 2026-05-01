@@ -1,0 +1,42 @@
+{
+  "datasetVersion": "2026-04-30",
+  "fetchedAt": "2026-04-30T00:00:00.000Z",
+  "sourceUrls": [
+    "https://oldschool.runescape.wiki/w/Music"
+  ],
+  "tracks": [
+    {
+      "id": "7th-realm",
+      "title": "7th Realm",
+      "wikiUrl": "https://oldschool.runescape.wiki/w/7th_Realm",
+      "audioUrl": "https://oldschool.runescape.wiki/images/7th_Realm.ogg",
+      "duration": "04:07",
+      "members": false,
+      "unlockHint": "Unlocked in the Brimhaven Dungeon",
+      "isHoliday": false,
+      "sourceRevision": null
+    },
+    {
+      "id": "adventure",
+      "title": "Adventure",
+      "wikiUrl": "https://oldschool.runescape.wiki/w/Adventure",
+      "audioUrl": "https://oldschool.runescape.wiki/images/Adventure.ogg",
+      "duration": "02:41",
+      "members": false,
+      "unlockHint": "Unlocked in Varrock",
+      "isHoliday": false,
+      "sourceRevision": null
+    },
+    {
+      "id": "al-kharid",
+      "title": "Al Kharid",
+      "wikiUrl": "https://oldschool.runescape.wiki/w/Al_Kharid_(music_track)",
+      "audioUrl": "https://oldschool.runescape.wiki/images/Al_Kharid.ogg",
+      "duration": "03:18",
+      "members": false,
+      "unlockHint": "Unlocked in Al Kharid",
+      "isHoliday": false,
+      "sourceRevision": null
+    }
+  ]
+}
