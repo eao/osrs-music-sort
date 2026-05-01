@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Track } from '../../src/domain/types';
 import { loadStoredState, saveStoredState, STORAGE_KEY } from '../../src/domain/storage';
 
@@ -30,6 +30,7 @@ const tracks: Track[] = [
 describe('storage', () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.restoreAllMocks();
   });
 
   it('creates initial state when nothing is stored', () => {
@@ -55,6 +56,22 @@ describe('storage', () => {
   it('migrates existing ratings by stable track ID when dataset changes', () => {
     const state = loadStoredState('2026-04-30', tracks);
     state.ratings.a.mu = 31;
+    state.comparisons.push(
+      {
+        id: 'kept',
+        leftTrackId: 'a',
+        rightTrackId: 'b',
+        result: 'left',
+        createdAt: '2026-04-30T00:00:00.000Z'
+      },
+      {
+        id: 'removed',
+        leftTrackId: 'a',
+        rightTrackId: 'missing',
+        result: 'right',
+        createdAt: '2026-04-30T00:00:01.000Z'
+      }
+    );
     saveStoredState(state);
 
     const migrated = loadStoredState('2026-05-01', [
@@ -70,5 +87,27 @@ describe('storage', () => {
     expect(migrated.ratings.a.mu).toBe(31);
     expect(migrated.ratings.c.mu).toBe(25);
     expect(migrated.ratings.b).toBeUndefined();
+    expect(migrated.comparisons.map((comparison) => comparison.id)).toEqual([]);
+  });
+
+  it('returns initial state when localStorage cannot be read', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+
+    const state = loadStoredState('2026-04-30', tracks);
+
+    expect(state.datasetVersion).toBe('2026-04-30');
+    expect(Object.keys(state.ratings)).toEqual(['a', 'b']);
+  });
+
+  it('does not throw when localStorage cannot be written', () => {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('quota');
+    });
+
+    const state = loadStoredState('2026-04-30', tracks);
+
+    expect(() => saveStoredState(state)).not.toThrow();
   });
 });

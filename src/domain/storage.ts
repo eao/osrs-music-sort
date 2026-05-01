@@ -5,7 +5,13 @@ export const STORAGE_KEY = 'osrs-music-ranker-state';
 
 export function loadStoredState(datasetVersion: string, tracks: Track[]): StoredState {
   const initial = createEmptyState(datasetVersion, tracks);
-  const raw = localStorage.getItem(STORAGE_KEY);
+  let raw: string | null;
+
+  try {
+    raw = localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return initial;
+  }
 
   if (!raw) {
     return initial;
@@ -35,7 +41,11 @@ export function loadStoredState(datasetVersion: string, tracks: Track[]): Stored
 }
 
 export function saveStoredState(state: StoredState): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // Persistence is best-effort; keep the in-memory ranking flow usable.
+  }
 }
 
 export function createEmptyState(datasetVersion: string, tracks: Track[]): StoredState {
@@ -56,6 +66,7 @@ export function createEmptyState(datasetVersion: string, tracks: Track[]): Store
 function migrateState(previous: StoredState, datasetVersion: string, tracks: Track[]): StoredState {
   const next = createEmptyState(datasetVersion, tracks);
   const filteredRatings = filterRatings(previous.ratings, tracks);
+  const trackIds = new Set(tracks.map((track) => track.id));
 
   return {
     ...next,
@@ -63,7 +74,10 @@ function migrateState(previous: StoredState, datasetVersion: string, tracks: Tra
       ...next.ratings,
       ...filteredRatings
     },
-    comparisons: previous.comparisons,
+    comparisons: previous.comparisons.filter(
+      (comparison) =>
+        trackIds.has(comparison.leftTrackId) && trackIds.has(comparison.rightTrackId)
+    ),
     unavailableTrackIds: previous.unavailableTrackIds.filter((id) =>
       tracks.some((track) => track.id === id)
     ),
