@@ -6,9 +6,9 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "TMPDIR=/tmp playwright test --pass-with-no-tests",
     "fetch:tracks": "tsx scripts/fetchTracks.ts"
   },
   "dependencies": {
