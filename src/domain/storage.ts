@@ -24,7 +24,7 @@ export function loadStoredState(datasetVersion: string, tracks: Track[]): Stored
     }
 
     if (parsed.datasetVersion !== datasetVersion) {
-      return migrateState(parsed, datasetVersion, tracks);
+      return migrateStoredState(parsed, datasetVersion, tracks);
     }
 
     return {
@@ -63,7 +63,11 @@ export function createEmptyState(datasetVersion: string, tracks: Track[]): Store
   };
 }
 
-function migrateState(previous: StoredState, datasetVersion: string, tracks: Track[]): StoredState {
+export function migrateStoredState(
+  previous: StoredState,
+  datasetVersion: string,
+  tracks: Track[]
+): StoredState {
   const next = createEmptyState(datasetVersion, tracks);
   const filteredRatings = filterRatings(previous.ratings, tracks);
   const trackIds = new Set(tracks.map((track) => track.id));
@@ -78,9 +82,7 @@ function migrateState(previous: StoredState, datasetVersion: string, tracks: Tra
       (comparison) =>
         trackIds.has(comparison.leftTrackId) && trackIds.has(comparison.rightTrackId)
     ),
-    unavailableTrackIds: previous.unavailableTrackIds.filter((id) =>
-      tracks.some((track) => track.id === id)
-    ),
+    unavailableTrackIds: previous.unavailableTrackIds.filter((id) => trackIds.has(id)),
     playback: previous.playback ?? next.playback
   };
 }
