@@ -90,6 +90,20 @@ describe('ranker app', () => {
     );
   });
 
+  it('uses current ranking track titles as wiki links', () => {
+    const root = document.createElement('main');
+    renderApp(root);
+
+    const rankingTitleLink = root.querySelector<HTMLAnchorElement>(
+      '.rankings-table tbody tr:first-child td:nth-child(2) a'
+    );
+
+    expect(rankingTitleLink?.textContent).toBe('7th Realm');
+    expect(rankingTitleLink?.href).toBe('https://oldschool.runescape.wiki/w/7th_Realm');
+    expect(rankingTitleLink?.target).toBe('_blank');
+    expect(rankingTitleLink?.rel).toBe('noreferrer');
+  });
+
   it('renders track options as an icon-only control beside the track label', () => {
     const root = document.createElement('main');
     renderApp(root);

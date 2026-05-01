@@ -843,9 +843,16 @@ function getCurrentTracks(
 
 function rankingRow(rank: number, track: Track, rating: StoredRating): HTMLTableRowElement {
   const row = document.createElement('tr');
+  const titleCell = element('td');
+  const titleLink = element('a', 'track-title-link', track.title);
+  titleLink.href = track.wikiUrl;
+  titleLink.target = '_blank';
+  titleLink.rel = 'noreferrer';
+  titleCell.append(titleLink);
+
   row.append(
     element('td', undefined, String(rank)),
-    element('td', undefined, track.title),
+    titleCell,
     element('td', undefined, conservativeScore(rating).toFixed(2)),
     element('td', undefined, `${rating.wins}-${rating.losses}-${rating.ties}`),
     element('td', undefined, String(rating.comparisons))
