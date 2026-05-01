@@ -1,4 +1,9 @@
 import { getTrackSnapshot } from './data/tracks';
+import {
+  createRankingBackup,
+  importRankingBackup,
+  rankingBackupFilename
+} from './domain/backup';
 import { selectNextPair } from './domain/pairing';
 import { applyComparisonResult, conservativeScore, rankedRatings } from './domain/rating';
 import { loadStoredState, saveStoredState, STORAGE_KEY } from './domain/storage';
@@ -24,6 +29,7 @@ export function renderApp(root: HTMLElement): void {
     blocked: false,
     message: 'Ready'
   };
+  let settingsStatus = '';
 
   const rerender = (options: { autoplay?: boolean } = {}): void => {
     state = ensureCurrentPair(state, snapshot.tracks);
@@ -51,7 +57,8 @@ export function renderApp(root: HTMLElement): void {
   const renderShell = (): HTMLElement => {
     const shell = element('div', 'app-shell');
     const header = element('header', 'site-header');
-    header.append(
+    const headerText = element('div', 'header-text');
+    headerText.append(
       element('h1', undefined, 'OSRS Music Ranker'),
       element(
         'p',
@@ -59,9 +66,101 @@ export function renderApp(root: HTMLElement): void {
         `${state.comparisons.length.toLocaleString()} comparisons saved`
       )
     );
+    header.append(
+      headerText,
+      renderSettings()
+    );
 
     shell.append(header, renderMatchup(), renderRankings());
     return shell;
+  };
+
+  const renderSettings = (): HTMLElement => {
+    const details = document.createElement('details');
+    details.className = 'settings';
+    details.dataset.testid = 'settings';
+
+    const summary = document.createElement('summary');
+    summary.textContent = 'Settings';
+
+    const menu = element('div', 'settings-menu');
+    menu.append(exportButton(), importLabel());
+
+    const status = element('p', 'settings-status', settingsStatus);
+    status.dataset.testid = 'settings-status';
+    menu.append(status);
+
+    details.append(summary, menu);
+    return details;
+  };
+
+  const exportButton = (): HTMLButtonElement => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'export-button';
+    button.dataset.testid = 'export-ranking';
+    button.textContent = 'Export ranking data';
+    button.addEventListener('click', () => {
+      exportRankingData();
+    });
+    return button;
+  };
+
+  const importLabel = (): HTMLLabelElement => {
+    const label = element('label', 'import-label') as HTMLLabelElement;
+    label.textContent = 'Import ranking data';
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json,.json';
+    input.dataset.testid = 'import-ranking';
+    input.addEventListener('change', () => {
+      void importRankingData(input.files?.[0] ?? null);
+    });
+
+    label.append(input);
+    return label;
+  };
+
+  const exportRankingData = (): void => {
+    try {
+      const exportedAt = new Date(Date.now()).toISOString();
+      const backup = createRankingBackup(state, exportedAt);
+      const blob = new Blob([JSON.stringify(backup, null, 2)], {
+        type: 'application/json'
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = rankingBackupFilename(exportedAt);
+      link.click();
+      URL.revokeObjectURL(url);
+      settingsStatus = 'Ranking data exported.';
+    } catch {
+      settingsStatus = 'Ranking data could not be exported.';
+    }
+
+    rerender();
+  };
+
+  const importRankingData = async (file: File | null): Promise<void> => {
+    if (!file) {
+      return;
+    }
+
+    const raw = await readFileText(file);
+    const result = importRankingBackup(raw, snapshot.datasetVersion, snapshot.tracks);
+    if (!result.ok) {
+      settingsStatus = result.message;
+      rerender();
+      return;
+    }
+
+    state = result.state;
+    undoState = null;
+    settingsStatus = 'Ranking data imported.';
+    saveStoredState(state);
+    rerender();
   };
 
   const renderMatchup = (): HTMLElement => {
@@ -451,6 +550,23 @@ function cloneState(state: StoredState): StoredState {
     lastPair: state.lastPair ? [state.lastPair[0], state.lastPair[1]] : null,
     playback: { ...state.playback }
   };
+}
+
+function readFileText(file: File): Promise<string> {
+  if (typeof file.text === 'function') {
+    return file.text();
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener('load', () => {
+      resolve(String(reader.result ?? ''));
+    });
+    reader.addEventListener('error', () => {
+      reject(reader.error ?? new Error('Could not read file.'));
+    });
+    reader.readAsText(file);
+  });
 }
 
 function ensureCurrentPair(state: StoredState, tracks: Track[]): StoredState {

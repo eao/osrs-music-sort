@@ -103,6 +103,100 @@ describe('ranker app', () => {
     expect(leftSummary?.getAttribute('aria-label')).toBe('Track A options');
   });
 
+  it('shows ranking import and export actions in the settings menu', () => {
+    const root = document.createElement('main');
+    renderApp(root);
+
+    root.querySelector<HTMLDetailsElement>('[data-testid="settings"]')?.setAttribute('open', '');
+
+    expect(root.querySelector<HTMLButtonElement>('[data-testid="export-ranking"]')?.textContent).toBe(
+      'Export ranking data'
+    );
+    expect(root.querySelector<HTMLInputElement>('[data-testid="import-ranking"]')?.type).toBe(
+      'file'
+    );
+  });
+
+  it('imports ranking data from a backup file and rerenders progress', async () => {
+    const snapshot = getTrackSnapshot();
+    const backup = {
+      app: 'osrs-music-ranker',
+      backupVersion: 1,
+      exportedAt: '2026-05-01T12:00:00.000Z',
+      state: {
+        schemaVersion: 1,
+        datasetVersion: snapshot.datasetVersion,
+        ratings: Object.fromEntries(
+          snapshot.tracks.map((track) => [
+            track.id,
+            {
+              trackId: track.id,
+              mu: 25,
+              sigma: 25 / 3,
+              comparisons: 0,
+              wins: 0,
+              losses: 0,
+              ties: 0
+            }
+          ])
+        ),
+        comparisons: [
+          {
+            id: 'imported',
+            leftTrackId: '7th-realm',
+            rightTrackId: 'adventure',
+            result: 'left',
+            createdAt: '2026-05-01T12:00:00.000Z'
+          }
+        ],
+        unavailableTrackIds: [],
+        currentPair: ['7th-realm', 'adventure'],
+        lastPair: null,
+        playback: { volume: 0.8 }
+      }
+    };
+
+    const root = document.createElement('main');
+    renderApp(root);
+    const input = root.querySelector<HTMLInputElement>('[data-testid="import-ranking"]');
+    const file = new File([JSON.stringify(backup)], 'backup.json', { type: 'application/json' });
+    Object.defineProperty(file, 'text', {
+      value: () => Promise.resolve(JSON.stringify(backup)),
+      configurable: true
+    });
+    Object.defineProperty(input, 'files', { value: [file], configurable: true });
+
+    input?.dispatchEvent(new Event('change'));
+    await waitForFileImport();
+
+    expect(root.textContent).toContain('1 comparisons saved');
+    expect(root.querySelector('[data-testid="settings-status"]')?.textContent).toBe(
+      'Ranking data imported.'
+    );
+  });
+
+  it('leaves current progress untouched when import fails', async () => {
+    const root = document.createElement('main');
+    renderApp(root);
+    root.querySelector<HTMLButtonElement>('[data-testid="prefer-left"]')?.click();
+    const input = root.querySelector<HTMLInputElement>('[data-testid="import-ranking"]');
+    const file = new File(['{'], 'broken.json', { type: 'application/json' });
+    Object.defineProperty(file, 'text', {
+      value: () => Promise.resolve('{'),
+      configurable: true
+    });
+    Object.defineProperty(input, 'files', { value: [file], configurable: true });
+
+    input?.dispatchEvent(new Event('change'));
+    await waitForFileImport();
+
+    const stored = JSON.parse(localStorage.getItem('osrs-music-ranker-state') ?? '{}');
+    expect(stored.comparisons).toHaveLength(1);
+    expect(root.querySelector('[data-testid="settings-status"]')?.textContent).toBe(
+      'Backup file is not valid JSON.'
+    );
+  });
+
   it('marks a track unavailable and saves that marker from options', () => {
     const root = document.createElement('main');
     renderApp(root);
@@ -237,4 +331,10 @@ function displayedPair(root: HTMLElement): [string, string] {
   expect(right).toBeDefined();
 
   return [left?.id ?? '', right?.id ?? ''];
+}
+
+function waitForFileImport(): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
 }

@@ -40,6 +40,10 @@ button:disabled {
 }
 
 .site-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
   padding: 1rem 1.25rem;
   color: #f6ead2;
   background: #5b231f;
@@ -56,6 +60,47 @@ button:disabled {
 .comparison-count {
   margin: 0.25rem 0 0;
   color: #ead7b5;
+}
+
+.settings {
+  position: relative;
+  flex: 0 0 auto;
+  color: #f6ead2;
+}
+
+.settings summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.settings-menu {
+  position: absolute;
+  right: 0;
+  z-index: 3;
+  display: grid;
+  gap: 0.5rem;
+  min-width: 15rem;
+  padding: 0.5rem;
+  color: #2b2118;
+  background: #f0e5cc;
+  border: 1px solid #8b7351;
+}
+
+.settings-menu button,
+.settings-menu label {
+  width: 100%;
+}
+
+.import-label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 700;
+}
+
+.settings-status {
+  margin: 0;
+  color: #4f3e29;
+  font-size: 0.9rem;
 }
 
 .matchup,
