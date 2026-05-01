@@ -1,0 +1,39 @@
+:root {
+  color: #2b2118;
+  background: #c8b28c;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #c8b28c;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  border: 1px solid #5f4b32;
+  background: #d8c7a6;
+  color: #2b2118;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.app-shell {
+  max-width: 1120px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: #e7ddc8;
+  border-left: 1px solid #a8916c;
+  border-right: 1px solid #a8916c;
+}

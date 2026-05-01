@@ -1,0 +1,27 @@
+{
+  "name": "osrs-sort",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "fetch:tracks": "tsx scripts/fetchTracks.ts"
+  },
+  "dependencies": {
+    "ts-trueskill": "^5.1.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "@types/node": "^22.15.0",
+    "jsdom": "^26.1.0",
+    "node-html-parser": "^7.0.1",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.4",
+    "vitest": "^3.1.2"
+  }
+}
