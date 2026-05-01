@@ -105,7 +105,7 @@ export function renderApp(root: HTMLElement): void {
       audio,
       wikiLink,
       heardButton(label, side, isHeard),
-      unavailableButton(side, track.id)
+      unavailableButton(label, side, track.id)
     );
 
     return article;
@@ -124,13 +124,17 @@ export function renderApp(root: HTMLElement): void {
     return button;
   };
 
-  const unavailableButton = (side: keyof HeardState, trackId: string): HTMLButtonElement => {
+  const unavailableButton = (
+    label: 'A' | 'B',
+    side: keyof HeardState,
+    trackId: string
+  ): HTMLButtonElement => {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'unavailable-button';
     button.dataset.testid =
       side === 'left' ? 'mark-left-unavailable' : 'mark-right-unavailable';
-    button.textContent = 'Mark unavailable';
+    button.textContent = `Mark Track ${label} unavailable`;
     button.addEventListener('click', () => {
       markUnavailable(side, trackId);
     });
@@ -297,6 +301,8 @@ function ensureCurrentPair(state: StoredState, tracks: Track[]): StoredState {
     currentPair &&
     state.ratings[currentPair[0]] &&
     state.ratings[currentPair[1]] &&
+    !unavailableTrackIds.has(currentPair[0]) &&
+    !unavailableTrackIds.has(currentPair[1]) &&
     tracks.some((track) => track.id === currentPair[0]) &&
     tracks.some((track) => track.id === currentPair[1]);
 

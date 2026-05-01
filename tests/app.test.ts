@@ -102,6 +102,53 @@ describe('ranker app', () => {
     const stored = JSON.parse(localStorage.getItem('osrs-music-ranker-state') ?? '{}');
     expect(stored.unavailableTrackIds).toEqual(['7th-realm']);
   });
+
+  it('replaces a stored current pair that contains an unavailable track', () => {
+    const snapshot = getTrackSnapshot();
+    localStorage.setItem(
+      'osrs-music-ranker-state',
+      JSON.stringify({
+        schemaVersion: 1,
+        datasetVersion: snapshot.datasetVersion,
+        ratings: Object.fromEntries(
+          snapshot.tracks.map((track) => [
+            track.id,
+            {
+              trackId: track.id,
+              mu: 25,
+              sigma: 25 / 3,
+              comparisons: 0,
+              wins: 0,
+              losses: 0,
+              ties: 0
+            }
+          ])
+        ),
+        comparisons: [],
+        unavailableTrackIds: ['adventure'],
+        currentPair: ['7th-realm', 'adventure'],
+        lastPair: null,
+        playback: { volume: 0.8 }
+      })
+    );
+
+    const root = document.createElement('main');
+    renderApp(root);
+
+    expect(displayedPair(root)).not.toContain('adventure');
+  });
+
+  it('labels unavailable controls by track side', () => {
+    const root = document.createElement('main');
+    renderApp(root);
+
+    expect(
+      root.querySelector<HTMLButtonElement>('[data-testid="mark-left-unavailable"]')?.textContent
+    ).toBe('Mark Track A unavailable');
+    expect(
+      root.querySelector<HTMLButtonElement>('[data-testid="mark-right-unavailable"]')?.textContent
+    ).toBe('Mark Track B unavailable');
+  });
 });
 
 function displayedPair(root: HTMLElement): [string, string] {
