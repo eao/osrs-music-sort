@@ -93,15 +93,21 @@ button:disabled {
 }
 
 .track-panel {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.5rem 1rem;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
   margin: 0 0 0.75rem;
   padding: 0.85rem;
   background: #d8c7a6;
   border: 1px solid #8b7351;
   min-width: 0;
+}
+
+.track-heading {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.35rem;
 }
 
 .track-panel h3 {
@@ -129,13 +135,18 @@ button:disabled {
 }
 
 .track-panel audio {
+  display: block;
   width: 100%;
   min-height: 40px;
+  margin-top: auto;
 }
 
-.track-panel a {
+.track-title-link {
   color: #5b231f;
   font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.12em;
 }
 
 .unavailable-button,
@@ -158,18 +169,46 @@ button:disabled {
 }
 
 .track-options {
-  margin-top: 0.35rem;
+  position: relative;
+  flex: 0 0 auto;
+  margin: 0;
 }
 
 .track-options summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
   color: #5b231f;
   cursor: pointer;
   font-weight: 700;
+  list-style: none;
+}
+
+.track-options summary::-webkit-details-marker {
+  display: none;
+}
+
+.track-options summary::before {
+  content: '▶';
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.track-options[open] summary::before {
+  content: '▼';
 }
 
 .track-options .unavailable-button {
-  margin-top: 0.5rem;
+  position: absolute;
+  z-index: 2;
+  top: 100%;
+  right: 0;
+  margin-top: 0.25rem;
   width: auto;
+  min-width: max-content;
+  box-shadow: 0 1px 2px #8b7351;
 }
 
 .choice-controls {
@@ -230,13 +269,11 @@ button:disabled {
     font-size: 1.55rem;
   }
 
-  .track-panel,
   .choice-controls,
   .matchup-panels {
     grid-template-columns: 1fr;
   }
 
-  .track-panel a,
   .unavailable-button,
   .secondary-controls {
     width: 100%;

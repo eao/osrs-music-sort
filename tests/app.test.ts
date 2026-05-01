@@ -75,6 +75,34 @@ describe('ranker app', () => {
     ).toBe('Mark Track A unavailable');
   });
 
+  it('uses track titles as wiki links without a separate wiki link', () => {
+    const root = document.createElement('main');
+    renderApp(root);
+
+    const leftTitleLink = root.querySelector<HTMLAnchorElement>(
+      '[data-testid="left-track"] h3 a'
+    );
+
+    expect(leftTitleLink?.textContent).toBe('7th Realm');
+    expect(leftTitleLink?.href).toBe('https://oldschool.runescape.wiki/w/7th_Realm');
+    expect([...root.querySelectorAll('a')].some((link) => link.textContent === 'Wiki')).toBe(
+      false
+    );
+  });
+
+  it('renders track options as an icon-only control beside the track label', () => {
+    const root = document.createElement('main');
+    renderApp(root);
+
+    const leftSummary = root.querySelector<HTMLElement>('[data-testid="left-options"] summary');
+
+    expect(
+      root.querySelector('[data-testid="left-track"] .track-heading [data-testid="left-options"]')
+    ).not.toBeNull();
+    expect(leftSummary?.textContent).toBe('');
+    expect(leftSummary?.getAttribute('aria-label')).toBe('Track A options');
+  });
+
   it('marks a track unavailable and saves that marker from options', () => {
     const root = document.createElement('main');
     renderApp(root);

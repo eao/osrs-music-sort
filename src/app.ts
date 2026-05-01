@@ -113,11 +113,18 @@ export function renderApp(root: HTMLElement): void {
       track.isHoliday ? 'Holiday' : null
     ].filter(Boolean);
 
-    const title = element('h3', undefined, track.title);
-    const wikiLink = element('a', undefined, 'Wiki');
-    wikiLink.setAttribute('href', track.wikiUrl);
-    wikiLink.setAttribute('target', '_blank');
-    wikiLink.setAttribute('rel', 'noreferrer');
+    const heading = element('div', 'track-heading');
+    heading.append(
+      element('p', 'track-label', `Track ${label}`),
+      trackOptions(label, side, track.id)
+    );
+
+    const title = element('h3', 'track-title');
+    const titleLink = element('a', 'track-title-link', track.title);
+    titleLink.setAttribute('href', track.wikiUrl);
+    titleLink.setAttribute('target', '_blank');
+    titleLink.setAttribute('rel', 'noreferrer');
+    title.append(titleLink);
 
     const audio = document.createElement('audio');
     audio.controls = true;
@@ -131,13 +138,11 @@ export function renderApp(root: HTMLElement): void {
     }
 
     article.append(
-      element('p', 'track-label', `Track ${label}`),
+      heading,
       title,
       element('p', 'track-meta', meta.join(' | ') || 'Music track'),
       track.unlockHint ? element('p', 'unlock-hint', track.unlockHint) : element('p'),
-      audio,
-      wikiLink,
-      trackOptions(label, side, track.id)
+      audio
     );
 
     return article;
@@ -174,7 +179,8 @@ export function renderApp(root: HTMLElement): void {
     details.dataset.testid = side === 'left' ? 'left-options' : 'right-options';
 
     const summary = document.createElement('summary');
-    summary.textContent = 'Options';
+    summary.setAttribute('aria-label', `Track ${label} options`);
+    summary.setAttribute('title', `Track ${label} options`);
     details.append(summary, unavailableButton(label, side, trackId));
     return details;
   };
