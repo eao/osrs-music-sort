@@ -4,6 +4,11 @@ import {
   importRankingBackup,
   rankingBackupFilename
 } from './domain/backup';
+import {
+  buildJukeboxPlaylist,
+  nextPlaylistIndex,
+  previousPlaylistIndex
+} from './domain/jukebox';
 import { selectNextPair } from './domain/pairing';
 import { applyComparisonResult, conservativeScore, rankedRatings } from './domain/rating';
 import { loadStoredState, saveStoredState, STORAGE_KEY } from './domain/storage';
@@ -18,6 +23,16 @@ type PlaybackState = {
   message: string;
 };
 
+type AppMode = 'sort' | 'jukebox';
+
+type JukeboxState = {
+  limit: number;
+  playlist: Track[];
+  currentIndex: number;
+  blocked: boolean;
+  message: string;
+};
+
 export function renderApp(root: HTMLElement): void {
   const snapshot = getTrackSnapshot();
   const trackById = new Map(snapshot.tracks.map((track) => [track.id, track]));
@@ -28,6 +43,14 @@ export function renderApp(root: HTMLElement): void {
     side: 'left',
     blocked: false,
     message: 'Ready'
+  };
+  let mode: AppMode = 'sort';
+  let jukebox: JukeboxState = {
+    limit: 0,
+    playlist: [],
+    currentIndex: 0,
+    blocked: false,
+    message: ''
   };
   let settingsStatus = '';
 
@@ -47,7 +70,7 @@ export function renderApp(root: HTMLElement): void {
 
     root.replaceChildren(renderShell());
 
-    if (pairKey && (pairChanged || options.autoplay)) {
+    if (mode === 'sort' && pairKey && (pairChanged || options.autoplay)) {
       queueMicrotask(() => {
         void playCurrentSide();
       });
@@ -71,8 +94,37 @@ export function renderApp(root: HTMLElement): void {
       renderSettings()
     );
 
-    shell.append(header, renderMatchup(), renderRankings());
+    shell.append(header, renderModeSwitch());
+    if (mode === 'jukebox') {
+      shell.append(renderJukebox(), renderRankings());
+    } else {
+      shell.append(renderMatchup(), renderRankings());
+    }
     return shell;
+  };
+
+  const renderModeSwitch = (): HTMLElement => {
+    const nav = element('nav', 'mode-switch');
+    nav.setAttribute('aria-label', 'Mode');
+    nav.append(modeButton('Sort', 'sort'), modeButton('Jukebox', 'jukebox'));
+    return nav;
+  };
+
+  const modeButton = (label: string, nextMode: AppMode): HTMLButtonElement => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'mode-button';
+    button.dataset.testid = nextMode === 'sort' ? 'mode-sort' : 'mode-jukebox';
+    button.setAttribute('aria-pressed', String(mode === nextMode));
+    button.textContent = label;
+    button.addEventListener('click', () => {
+      mode = nextMode;
+      if (mode === 'jukebox') {
+        rebuildJukeboxPlaylist({ autoplay: false });
+      }
+      rerender();
+    });
+    return button;
   };
 
   const renderSettings = (): HTMLElement => {
@@ -159,8 +211,169 @@ export function renderApp(root: HTMLElement): void {
     state = result.state;
     undoState = null;
     settingsStatus = 'Ranking data imported.';
+    rebuildJukeboxPlaylist({ autoplay: false });
     saveStoredState(state);
     rerender();
+  };
+
+  const renderJukebox = (): HTMLElement => {
+    if (jukebox.playlist.length === 0) {
+      rebuildJukeboxPlaylist({ autoplay: false });
+    }
+
+    const section = element('section', 'jukebox-player');
+    section.dataset.testid = 'jukebox';
+    section.setAttribute('aria-label', 'Jukebox');
+    section.append(element('h2', undefined, 'Jukebox'));
+
+    const controls = element('div', 'jukebox-controls');
+    const limitLabel = element('label', 'jukebox-limit-label') as HTMLLabelElement;
+    limitLabel.textContent = 'Top tracks';
+    const limitInput = document.createElement('input');
+    limitInput.type = 'number';
+    limitInput.min = '0';
+    limitInput.step = '1';
+    limitInput.value = String(jukebox.limit);
+    limitInput.dataset.testid = 'jukebox-limit';
+    limitInput.addEventListener('input', () => {
+      jukebox.limit = Math.max(0, Number.parseInt(limitInput.value, 10) || 0);
+      rebuildJukeboxPlaylist({ autoplay: false });
+      rerender();
+    });
+    limitLabel.append(limitInput);
+    controls.append(limitLabel, element('p', 'jukebox-note', '0 means all eligible tracks.'));
+    section.append(controls);
+
+    const currentTrack = jukebox.playlist[jukebox.currentIndex];
+    if (!currentTrack) {
+      section.append(element('p', undefined, 'No playable tracks are available.'));
+      return section;
+    }
+
+    const title = element('h3', 'jukebox-title');
+    const titleLink = element('a', 'track-title-link', currentTrack.title);
+    titleLink.href = currentTrack.wikiUrl;
+    titleLink.target = '_blank';
+    titleLink.rel = 'noreferrer';
+    titleLink.dataset.testid = 'jukebox-track-title';
+    title.append(titleLink);
+
+    const position = element(
+      'p',
+      'jukebox-position',
+      `${jukebox.currentIndex + 1} / ${jukebox.playlist.length}`
+    );
+    position.dataset.testid = 'jukebox-position';
+
+    const audio = document.createElement('audio');
+    audio.controls = true;
+    audio.preload = 'auto';
+    audio.dataset.testid = 'jukebox-audio';
+    if (currentTrack.audioUrl) {
+      audio.src = currentTrack.audioUrl;
+    }
+    audio.addEventListener('ended', () => {
+      advanceJukebox(1);
+    });
+
+    const playbackMessage = element('p', 'jukebox-message', jukebox.message);
+    playbackMessage.dataset.testid = 'jukebox-message';
+    if (jukebox.blocked) {
+      const startButton = document.createElement('button');
+      startButton.type = 'button';
+      startButton.textContent = 'Start playback';
+      startButton.dataset.testid = 'jukebox-start';
+      startButton.addEventListener('click', () => {
+        void playJukeboxCurrent();
+      });
+      playbackMessage.append(' ', startButton);
+    }
+
+    const buttons = element('div', 'jukebox-buttons');
+    buttons.append(
+      jukeboxButton('Previous', () => advanceJukebox(-1)),
+      jukeboxButton('Next', () => advanceJukebox(1)),
+      jukeboxButton('Reshuffle', () => {
+        rebuildJukeboxPlaylist({ autoplay: true });
+        rerender();
+      })
+    );
+
+    section.append(title, position, audio, playbackMessage, buttons);
+    return section;
+  };
+
+  const jukeboxButton = (label: string, action: () => void): HTMLButtonElement => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = label;
+    button.addEventListener('click', action);
+    return button;
+  };
+
+  const rebuildJukeboxPlaylist = (options: { autoplay: boolean }): void => {
+    jukebox = {
+      ...jukebox,
+      playlist: buildJukeboxPlaylist({
+        tracks: snapshot.tracks,
+        ratings: state.ratings,
+        unavailableTrackIds: new Set(state.unavailableTrackIds),
+        limit: jukebox.limit
+      }),
+      currentIndex: 0,
+      blocked: false,
+      message: ''
+    };
+
+    if (options.autoplay) {
+      queueMicrotask(() => {
+        void playJukeboxCurrent();
+      });
+    }
+  };
+
+  const advanceJukebox = (direction: -1 | 1): void => {
+    if (jukebox.playlist.length === 0) {
+      return;
+    }
+
+    const nextIndex =
+      direction === 1
+        ? nextPlaylistIndex(jukebox.currentIndex, jukebox.playlist.length)
+        : previousPlaylistIndex(jukebox.currentIndex);
+    const atEnd = direction === 1 && nextIndex === jukebox.currentIndex;
+    jukebox = {
+      ...jukebox,
+      currentIndex: nextIndex,
+      blocked: false,
+      message: atEnd ? 'End of playlist.' : ''
+    };
+    rerender();
+
+    if (!atEnd) {
+      queueMicrotask(() => {
+        void playJukeboxCurrent();
+      });
+    }
+  };
+
+  const playJukeboxCurrent = async (): Promise<void> => {
+    const audio = root.querySelector<HTMLAudioElement>('[data-testid="jukebox-audio"]');
+    if (!audio) {
+      return;
+    }
+
+    try {
+      await audio.play();
+      jukebox = { ...jukebox, blocked: false, message: '' };
+    } catch {
+      jukebox = {
+        ...jukebox,
+        blocked: true,
+        message: 'Autoplay was blocked.'
+      };
+      rerender();
+    }
   };
 
   const renderMatchup = (): HTMLElement => {

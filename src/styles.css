@@ -103,8 +103,27 @@ button:disabled {
   font-size: 0.9rem;
 }
 
+.mode-switch,
+.jukebox-controls,
+.jukebox-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.mode-switch {
+  margin: 1rem 1rem 0;
+}
+
+.mode-button[aria-pressed='true'] {
+  color: #fff4df;
+  background: #7b3029;
+  border-color: #3c1714;
+}
+
 .matchup,
-.rankings {
+.rankings,
+.jukebox-player {
   margin: 1rem;
   padding: 1rem;
   background: #f0e5cc;
@@ -112,11 +131,40 @@ button:disabled {
 }
 
 .matchup h2,
-.rankings h2 {
+.rankings h2,
+.jukebox-player h2 {
   margin: 0 0 0.85rem;
   color: #5b231f;
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 1.35rem;
+}
+
+.jukebox-limit-label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 700;
+}
+
+.jukebox-limit-label input {
+  width: 7rem;
+}
+
+.jukebox-note,
+.jukebox-position,
+.jukebox-message {
+  margin: 0;
+  color: #4f3e29;
+}
+
+.jukebox-title {
+  margin: 1rem 0 0.35rem;
+  font-size: 1.25rem;
+}
+
+.jukebox-player audio {
+  display: block;
+  width: 100%;
+  margin: 0.75rem 0;
 }
 
 .playback-status {

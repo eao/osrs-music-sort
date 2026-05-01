@@ -197,6 +197,49 @@ describe('ranker app', () => {
     );
   });
 
+  it('switches to jukebox mode and renders a shuffled playlist player', () => {
+    const root = document.createElement('main');
+    renderApp(root);
+
+    root.querySelector<HTMLButtonElement>('[data-testid="mode-jukebox"]')?.click();
+
+    expect(root.querySelector('[data-testid="jukebox"]')).not.toBeNull();
+    expect(root.querySelector<HTMLInputElement>('[data-testid="jukebox-limit"]')?.value).toBe('0');
+    expect(root.querySelector<HTMLAudioElement>('[data-testid="jukebox-audio"]')?.src).toContain(
+      '.ogg'
+    );
+  });
+
+  it('advances jukebox playback when the current track ends', async () => {
+    const root = document.createElement('main');
+    renderApp(root);
+    root.querySelector<HTMLButtonElement>('[data-testid="mode-jukebox"]')?.click();
+
+    const firstTitle = root.querySelector('[data-testid="jukebox-track-title"]')?.textContent;
+    root
+      .querySelector<HTMLAudioElement>('[data-testid="jukebox-audio"]')
+      ?.dispatchEvent(new Event('ended'));
+    await Promise.resolve();
+
+    expect(root.querySelector('[data-testid="jukebox-track-title"]')?.textContent).not.toBe(
+      firstTitle
+    );
+  });
+
+  it('rebuilds the jukebox playlist when the top track limit changes', () => {
+    const root = document.createElement('main');
+    renderApp(root);
+    root.querySelector<HTMLButtonElement>('[data-testid="mode-jukebox"]')?.click();
+
+    const input = root.querySelector<HTMLInputElement>('[data-testid="jukebox-limit"]');
+    if (input) {
+      input.value = '1';
+      input.dispatchEvent(new Event('input'));
+    }
+
+    expect(root.querySelector('[data-testid="jukebox-position"]')?.textContent).toBe('1 / 1');
+  });
+
   it('marks a track unavailable and saves that marker from options', () => {
     const root = document.createElement('main');
     renderApp(root);
