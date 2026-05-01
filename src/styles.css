@@ -334,6 +334,15 @@ button:disabled {
   margin: 0 0 0.85rem;
 }
 
+.snapshot-footer {
+  margin: 1rem;
+  padding: 0.75rem 1rem;
+  color: #4f3e29;
+  background: #eadbc0;
+  border: 1px solid #b39a72;
+  font-size: 0.9rem;
+}
+
 .rankings-table {
   width: 100%;
   border-collapse: collapse;

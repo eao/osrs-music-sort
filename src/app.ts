@@ -100,6 +100,7 @@ export function renderApp(root: HTMLElement): void {
     } else {
       shell.append(renderMatchup(), renderRankings());
     }
+    shell.append(renderSnapshotFooter());
     return shell;
   };
 
@@ -301,6 +302,26 @@ export function renderApp(root: HTMLElement): void {
 
     section.append(title, position, audio, playbackMessage, buttons);
     return section;
+  };
+
+  const renderSnapshotFooter = (): HTMLElement => {
+    const footer = element('footer', 'snapshot-footer');
+    footer.dataset.testid = 'snapshot-footer';
+
+    const fetchedDate = new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: 'UTC'
+    }).format(new Date(snapshot.fetchedAt));
+    const sourceRevision = snapshot.tracks.find((track) => track.sourceRevision)?.sourceRevision;
+
+    footer.textContent = `Music data snapshot from the OSRS Wiki, fetched ${fetchedDate}.`;
+    if (sourceRevision) {
+      footer.append(` Source revision ${sourceRevision}.`);
+    }
+
+    return footer;
   };
 
   const jukeboxButton = (label: string, action: () => void): HTMLButtonElement => {

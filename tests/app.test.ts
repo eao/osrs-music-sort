@@ -240,6 +240,18 @@ describe('ranker app', () => {
     expect(root.querySelector('[data-testid="jukebox-position"]')?.textContent).toBe('1 / 1');
   });
 
+  it('renders the OSRS Wiki snapshot date and source revision in the footer', () => {
+    const root = document.createElement('main');
+    renderApp(root);
+
+    expect(root.querySelector('[data-testid="snapshot-footer"]')?.textContent).toContain(
+      'Music data snapshot from the OSRS Wiki, fetched May 1, 2026.'
+    );
+    expect(root.querySelector('[data-testid="snapshot-footer"]')?.textContent).toContain(
+      'Source revision 15160007.'
+    );
+  });
+
   it('marks a track unavailable and saves that marker from options', () => {
     const root = document.createElement('main');
     renderApp(root);
